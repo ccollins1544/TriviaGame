@@ -18,7 +18,7 @@
   2.2 Hamburger Nav
 
 3.0 MAIN LAYOUT INFO
-  3.1 Game Layout
+  3.1 Game Layout - Questions and Answers
 
 4.0 FOOTER
   4.1 Footer Links and Credits
@@ -66,7 +66,7 @@ h4,
 h5,
 h6 {
   font-family: 'Montserrat', sans-serif;
-  font-weight: 900; 
+  font-weight: 900;
 }
 
 body.page-template {
@@ -80,7 +80,7 @@ body.page-template {
 }
 
 article#main-container {
-  margin-top: 0px;
+  margin-top: 40px;
 }
 
 /** STICKY FOOTER
@@ -92,8 +92,10 @@ article#main-container {
 
 section#main-section {
   border-radius: 5px;
-  padding: 1rem 2rem !important;
+  padding: 1em 0 0 0 !important;
   margin-bottom: 0px;
+  border-color: var(--primary-menu-background);
+  box-shadow: 0px 12px 18px -6px var(--primary-menu-background);
 }
 
 .container-fluid {
@@ -103,7 +105,7 @@ section#main-section {
 .row {
   margin: 0 auto;
   padding: 15px 0px;
-  margin-bottom: 1rem;
+  margin-bottom: 0px;
 }
 
 .first-row {
@@ -115,8 +117,8 @@ section.section-block {
   margin: 0 auto;
   max-width: 980px;
   text-align: center;
-  color: var(--body-background);
-  background-color: rgba(0, 0, 0, 0.5);
+  /* color: var(--body-background); */ 
+  background-color: #fff; /* rgba(0, 0, 0, 0.5); */ 
 }
 
 li {
@@ -258,8 +260,42 @@ hr {
 /*------------------------------------------------------*/
 /*--------------[ 3.0 MAIN LAYOUT INFO ]----------------*/
 /*------------------------------------------------------*/
-/* 3.1 Game Layout
+/* 3.1 Game Layout - Questions and Answers
 /*------------------------------------------------------*/
+.custom-checkbox .custom-control-label::before {
+  border-radius: 50%;
+}
+
+.custom-control-input:checked~.custom-control-label::before {
+  border-color: var(--accent-text);
+  background-color: var(--accent-text);
+}
+
+.list-group-item {
+  padding: 0.5rem 1.25rem;
+  border: none;
+}
+
+.quiz_controls .far {
+  color: var(--primary-menu-background);
+  cursor: pointer;
+}
+
+.quiz_controls .far:hover {
+  color: var(--body-text);
+}
+
+#display_timer {
+  font-family: monospace;
+  font-size: 32px;
+  color: green;
+
+  /* Typography */
+  text-align: center;
+
+  /* Visual */
+  /* background: black; */
+}
 
 /*------------------------------------------------------*/
 /*--------------[ 4.0 FOOTER ]--------------------------*/
