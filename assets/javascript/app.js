@@ -37,7 +37,8 @@
 * NOTE: the variables QUESTIONS and ANSWERS must be predefined in the following script,
 * <script src="assets/javascript/app-data.js" type="text/javascript"></script>
 */
-var SCORE = new Array(QUESTIONS.length) // array of booleans representing right/wrong answers to the questions.
+var SCORE = new Array(QUESTIONS.length); // array of booleans representing right/wrong answers to the questions.
+var SUBMITTED_ANSWERS = new Array(QUESTIONS.length); // Array of integers representing answers index.
 var QUIZ_PROGRESS = $('.loader');
 
 /* ===============[ 1. FUNCTIONS ]====================*/
@@ -92,10 +93,19 @@ function runEffect(element,selectedEffect="pulsate") {
  * 
  * @param {object} Q - question object with the properties: question, image, answer, wrong, topic, subtopic
  * @param {array}  A - array of all possible answers. These will be referenced by index from the question object.
- * @param {string} C - Question ?1 of ?2 where ?! represents the current question and ?2 represents total questions. 
+ * @param {string} questionNumber - Question ?1 of ?2 where ?! represents the current question and ?2 represents total questions. 
  * @return {html}  question
  */
-var createQuestion = function(Q,A,C){
+var createQuestion = function(Q,A,questionNumber){
+  // var questionNumber_arr = questionNumber.split(" ");
+  // var question_index = questionNumber-1;
+
+  // questionNumber_arr.forEach(function(value,index){
+  //   if(value === "of"){
+  //     question_index = questionNumber_arr[index-1];
+  //   }
+  // });
+
   var question = $("<li class='list-group-item question'>");
   question.text(Q.question);
 
@@ -119,8 +129,36 @@ var createQuestion = function(Q,A,C){
 
   for(var i=0; i < possible_answers.length; i++ ){
     var answer_option = $("<li class='list-group-item'><div class='custom-control custom-checkbox mr-sm-2'>");
-    answer_option.find(".custom-control").append("<input type='checkbox' class='custom-control-input' id='answer"+i+"' data-answer-index="+possible_answers[i]+" />");
-    answer_option.find(".custom-control").append("<label class='custom-control-label' for='answer"+i+"'>"+A[possible_answers[i]]+"</label>");
+
+    // See if question has already been graded
+    //SUBMITTED_ANSWERS[current_question_index] = submitted_answer;
+    if(SCORE[questionNumber-1] === undefined){
+      answer_option.find(".custom-control").append("<input type='checkbox' class='custom-control-input' id='answer"+i+"' data-answer-index="+possible_answers[i]+" />");  
+      answer_option.find(".custom-control").append("<label class='custom-control-label' for='answer"+i+"' data-answer-index="+possible_answers[i]+">"+A[possible_answers[i]]+"</label>");
+      
+    }else{ // This question has already been graded
+      // console.log("Question "+ questionNumber + " has already been graded");
+      if(possible_answers[i] === SUBMITTED_ANSWERS[questionNumber-1]){
+        answer_option.find(".custom-control").append("<input type='checkbox' class='custom-control-input' id='answer"+i+"' data-answer-index="+possible_answers[i]+" disabled='true' checked='true' />");
+        
+        if(QUESTIONS[questionNumber-1].answer.indexOf(SUBMITTED_ANSWERS[questionNumber-1]) !== -1){ // They got it right!
+          answer_option.find(".custom-control").append("<label class='custom-control-label right-answer' for='answer"+i+"' data-answer-index="+possible_answers[i]+">"+A[possible_answers[i]]+"</label>");
+          
+        }else{ // They got it wrong
+          answer_option.find(".custom-control").append("<label class='custom-control-label wrong-answer' for='answer"+i+"' data-answer-index="+possible_answers[i]+">"+A[possible_answers[i]]+"</label>");
+        }
+      }else{
+        answer_option.find(".custom-control").append("<input type='checkbox' class='custom-control-input' id='answer"+i+"' data-answer-index="+possible_answers[i]+" disabled='true'/>");
+        
+        if(QUESTIONS[questionNumber-1].answer.indexOf(possible_answers[i]) !== -1){ // This is the correct Answer
+          answer_option.find(".custom-control").append("<label class='custom-control-label right-answer' for='answer"+i+"' data-answer-index="+possible_answers[i]+">"+A[possible_answers[i]]+"</label>");
+        
+        }else{ // This is not the correct answer
+          answer_option.find(".custom-control").append("<label class='custom-control-label' for='answer"+i+"' data-answer-index="+possible_answers[i]+">"+A[possible_answers[i]]+"</label>");
+        }
+      }
+    }
+
     answers.find(".list-group").append(answer_option);
   }
 
@@ -128,7 +166,9 @@ var createQuestion = function(Q,A,C){
   answer_block = $("<li class='list-group-item answer_block'>").append(answer_block);
 
   question = $("<ul class='list-group text-left' >").append(question);
-  question.prepend(C);
+
+  var q_counter = "<li class='list-group-item question_counter' data-start='" + (questionNumber - 1) + "' data-end='"+ (QUESTIONS.length-1) + "'>Question "+ questionNumber +" of "+ QUESTIONS.length +"</li>";
+  question.prepend(q_counter);
   question.append(answer_block);
 
   return question;
@@ -146,6 +186,8 @@ function checkAnswer(){
     if($(this).is(':checked')){
       submitted_answer = $(this).data("answer-index");
     }
+
+    $(this).attr("disabled",true);
   });
 
   // Search Answers Array for submitted answer
@@ -157,10 +199,26 @@ function checkAnswer(){
   });
 
   SCORE[current_question_index] = matchFound;
+  SUBMITTED_ANSWERS[current_question_index] = submitted_answer;
 
-  var progress = ((current_question_index+1)/QUESTIONS.length)*100;
-  QUIZ_PROGRESS.setPercent(progress).draw();
-  // setTimeout(loader.setPercent(50).draw,5 * 1000);
+  // Update HTML to reflect right and wrong answers
+  $(".question_answers .answer_block .custom-control-label").each(function(){
+    console.log(matchFound + "&" + $(this).attr("data-answer-index") + " === " +submitted_answer);
+    if(matchFound === true && parseInt($(this).attr("data-answer-index")) === submitted_answer){
+      $(this).addClass("right-answer");
+      console.log("yep they got it right. "+ $(this).attr("data-answer-index") + " === " +submitted_answer);
+    }else{ // They got the answer wrong so we need to show right and wrong answers
+      // Their answer which was wrong
+      if(parseInt($(this).attr("data-answer-index")) === submitted_answer){
+        $(this).addClass("wrong-answer");
+      }
+      
+      // This is the correct answer. 
+      if(QUESTIONS[current_question_index].answer.indexOf(parseInt($(this).attr("data-answer-index"))) !== -1 ){
+        $(this).addClass("right-answer");
+      }
+    }
+  });
 
   // var total_score = parseInt($("#quiz_score").data("score"));
   var filtered_score = SCORE.filter(function(el){
@@ -168,16 +226,34 @@ function checkAnswer(){
   });
 
   var right_answers = 0;
+  var wrong_answers = 0;
   filtered_score.forEach(function(value){
-    if(value){ right_answers++; }
+    if(value){ 
+      right_answers++; 
+    }else{
+      wrong_answers++;
+    }
   });
 
   var total_score = (right_answers/filtered_score.length)*100;
   total_score = total_score.toFixed(0);
 
-  $("#quiz_score").data("score",total_score);
-  $("#quiz_score").text(total_score+"%");
-  runEffect($("#quiz_score"));
+  QUIZ_PROGRESS.setPercent(total_score).draw();
+  // var progress = ((current_question_index+1)/QUESTIONS.length)*100;
+  // setTimeout(loader.setPercent(50).draw,5 * 1000);
+
+  // $("#quiz_score").data("score",total_score);
+  // $("#quiz_score").text(total_score+"%");
+  // runEffect($("#quiz_score"));
+
+  // PROGRESS BARS
+  var right_score = ((right_answers/SCORE.length)*100).toFixed(0) + "%";
+  var wrong_score = ((wrong_answers/SCORE.length)*100).toFixed(0) + "%";
+  $("#game_progress .bg-success").html(right_score + " right");
+  $("#game_progress .bg-success").animate({width: right_score}, "slow");
+  $("#game_progress .bg-danger").html(wrong_score + " wrong");
+  $("#game_progress .bg-danger").animate({width: wrong_score},"slow");
+
 }// END checkAnswer()
 
 /**
@@ -188,8 +264,8 @@ function nextQuestion(){
   var next_question_index = parseInt($(".question_answers .question_counter").data("start"));
   next_question_index++;
   
-  var q_counter = "<li class='list-group-item question_counter' data-start='"+next_question_index+"' data-end='"+ (QUESTIONS.length-1) + "'>Question "+ (next_question_index + 1) +" of "+ QUESTIONS.length +"</li>";
-  var q = createQuestion(QUESTIONS[next_question_index],ANSWERS,q_counter);
+  var question_number = (next_question_index + 1);
+  var q = createQuestion(QUESTIONS[next_question_index], ANSWERS, question_number);
   $(".question_answers").empty();
   $(".question_answers").append(q);
 } 
@@ -202,8 +278,8 @@ function previousQuestion(){
   var previous_question_index = parseInt($(".question_answers .question_counter").data("start"));
   previous_question_index--;
   
-  var q_counter = "<li class='list-group-item question_counter' data-start='"+previous_question_index+"' data-end='"+ (QUESTIONS.length-1) + "'>Question "+ (previous_question_index + 1) +" of "+ QUESTIONS.length +"</li>";
-  var q = createQuestion(QUESTIONS[previous_question_index],ANSWERS,q_counter);
+  var question_number = (previous_question_index + 1);
+  var q = createQuestion(QUESTIONS[previous_question_index],ANSWERS,question_number);
   $(".question_answers").empty();
   $(".question_answers").append(q);
 }
@@ -214,8 +290,7 @@ function previousQuestion(){
 $(document).ready(function () {
   // 2.1 Generate the first question
   QUESTIONS = shuffle_array(QUESTIONS); // Make sure to only shuffle this ONCE
-  var q_counter = "<li class='list-group-item question_counter' data-start='0' data-end='"+ (QUESTIONS.length-1) + "'>Question 1 of "+ QUESTIONS.length +"</li>";
-  var q = createQuestion(QUESTIONS[0],ANSWERS,q_counter);
+  var q = createQuestion(QUESTIONS[0],ANSWERS,1);
   $(".question_answers").append(q);
 
   // 2.2 Make so only one question can be selected.

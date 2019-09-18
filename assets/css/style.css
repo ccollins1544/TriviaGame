@@ -44,8 +44,8 @@
   --button-background: #1E2022;
   --cool-red: #E9290F;
   --footer-hover-text: rgba(233, 41, 15, .9);
-  --ally-color: lightgreen;
-  --enemy-color: #E9290F;
+  --right-answer-color: lightgreen;
+  --wrong-answer-color: #E9290F;
 }
 
 /*------------------------------------------------------*/
@@ -262,6 +262,23 @@ hr {
 /*------------------------------------------------------*/
 /* 3.1 Game Layout - Questions and Answers
 /*------------------------------------------------------*/
+#game_progress.progress {
+  font-family: "Ubuntu";
+  position: absolute;
+  left: 0px;
+  top: 75px;
+  width: 100%;
+  background-color: rgba(82, 97, 107, 0.5);
+}
+
+.right-answer {
+  background-color: var(--right-answer-color) !important;
+}
+
+.wrong-answer {
+  color: var(--wrong-answer-color) !important;
+}
+
 .custom-checkbox .custom-control-label::before {
   border-radius: 50%;
 }
