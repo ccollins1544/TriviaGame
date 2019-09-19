@@ -271,10 +271,15 @@ hr {
   background-color: rgba(82, 97, 107, 0.5);
 }
 
+#correct_answer{
+  color: var(--right-answer-color) !important;
+}
+
 .right-answer {
   background-color: var(--right-answer-color) !important;
 }
 
+#wrong_answer,
 .wrong-answer {
   color: var(--wrong-answer-color) !important;
 }
