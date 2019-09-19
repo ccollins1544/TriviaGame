@@ -314,6 +314,10 @@ hr {
   /* background: black; */
 }
 
+#display_timer.loading_next{
+  color: var(--accent-text);
+}
+
 #quiz_progress {
   font-size: 20px;
   font-weight: bold;

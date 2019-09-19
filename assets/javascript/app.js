@@ -18,6 +18,7 @@
  *     1.4.3 See if question has already been graded
  *     1.4.4 COMBINED Answer Image with Possible Answers
  *     1.4.5 COMBINED Answer Block with the question
+ *     1.4.6 Start Countdown Timer
  * 
  *   1.5 checkAnswer
  *     1.5.1 Fetch Submitted Answer
@@ -35,29 +36,32 @@
  *     1.8.3 Set Quiz Progress to 0%
  *     1.8.4 Reset Progress Bars and game alerts
  * 
- * 2. Document Ready
- *   2.1 Generate the first question
- *   2.2 Make so only one question can be selected.
- *   2.3 Set Quiz Progress to 0%
- *   2.4 Set Up Clickable elements
+ *   1.9 gameAlert
+ * 
+ * 2. Timer Object
+ *   2.1 reset
+ *   2.2 start
+ *   2.3 startCountDown
+ *   2.4 stop
+ *   2.5 count
+ *   2.6 countDown
+ *   2.7 timeConverter
+ * 
+ * 3. Document Ready
+ *   3.1 Generate the first question
+ *   3.2 Make so only one question can be selected.
+ *   3.3 Set Quiz Progress to 0%
+ *   3.4 Set Up Clickable elements
  * 
  * @todo
- * -Add Timer on questions that auto-grades and moves on to the next question.
+ * -Add a START before game starts.
  * -Add Score Page
- * -Add New Game Feature
- * -Decide if I really need PreviousQuestion or not...and when to show it if I keep it. 
- * 
- * @done 
- * -Make so once the question has been graded the answer can't be changed.
- * -Detect if question has already been answered when viewing previous_question. 
- * -Update Correct/Wrong/Unanswered?
- * -Add Pictures and Questions
- * -Switch Score and % progress circle...maybe show a progress bar at the top instead. 
  *****************************************************/
 /* ===============[ 0. GLOBALS ]======================*/
 var SCORE = new Array(QUESTIONS.length);             // Empty array of booleans representing right/wrong answers to the questions.
 var SUBMITTED_ANSWERS = new Array(QUESTIONS.length); // Empty array of integers representing answers index.
 var QUIZ_PROGRESS = $('.loader');
+var TIMER_SECONDS = 20;
 
 /* ===============[ 1. FUNCTIONS ]====================*/
 /**
@@ -226,9 +230,19 @@ var createQuestion = function(Q,A,questionNumber){
     $(".quiz_controls .previous_question").html(previous_question_element);
 
   }else{ // Not Graded so remove controls...and set timer
-    $(".quiz_controls .check_answer").empty();
+
+    if($("#check_answer").length !== 0 ){
+      $("#check_answer").hide();
+    }else{
+      $(".quiz_controls .check_answer").empty();
+    }
+    
     $(".quiz_controls .next_question").empty();
     $(".quiz_controls .previous_question").empty();
+
+    // 1.4.6 Start Countdown Timer
+    Timer.reset();
+    Timer.startCountDown();
   }
 
   return question;
@@ -343,6 +357,16 @@ function checkAnswer(){
   if(QUESTIONS.length === (current_question_index + 1) ){
     previous_question_element = $("<i>").addClass("far fa-arrow-alt-circle-left fa-4x").attr("id","previous_question");
     next_question_element = "";
+  
+  }else{ 
+    // NOT last question so start counter for loading the next question.
+    Timer.loading_next = true;
+    Timer.time = (Math.floor(TIMER_SECONDS/4));
+    var converted = Timer.timeConverter(Timer.time);
+    $("#display_timer").text(converted);
+    $("#display_timer").removeClass("wrong-answer");
+    $("#display_timer").addClass("loading_next");
+    Timer.startCountDown();
   }
 
   $(".quiz_controls .check_answer").html(check_answer_element);
@@ -421,7 +445,7 @@ function newGame(){
 }
 
 /**
- * gameAlert()
+ * 1.9 gameAlert()
  * @param {string} message - Message to go in the alert box
  * @param {string} addThisClass - defaults to empty string. Can be info, danger, or success. 
  */
@@ -459,17 +483,121 @@ function gameAlert(message="", addThisClass="info"){
   return;
 }
 
-/**
- * 2. Document Ready
- */
+/* ===============[ 2. Timer Object ]====================*/
+var Timer = {
+  time: 0,
+  clockRunning: false,
+  intervalId: null,
+  loading_next: false,
+
+  // 2.1 reset
+  reset: function() {
+    Timer.time = TIMER_SECONDS;
+    Timer.loading_next = false;
+    var converted = Timer.timeConverter(Timer.time);
+    $("#display_timer").text(converted);
+    $("#display_timer").removeClass("wrong_answer");
+    $("#display_timer").removeClass("loading_next");
+  },
+
+  // 2.2 start
+  start: function() {
+    // Use setInterval to start the count here and set the clock to running.
+    if (!this.clockRunning) {
+      this.intervalId = setInterval(Timer.count, 1000);
+      this.clockRunning = true;
+    }
+  },
+
+  // 2.3 startCountDown
+  startCountDown: function() {
+    // Use setInterval to start the count here and set the clock to running.
+    if (!this.clockRunning) {
+      this.intervalId = setInterval(Timer.countDown, 1000);
+      this.clockRunning = true;
+    }
+  },
+  
+  // 2.4 stop
+  stop: function() {
+    // Use clearInterval to stop the count here and set the clock to not be running.
+    clearInterval(this.intervalId);
+    this.clockRunning = false;
+  },
+  
+  // 2.5 count
+  count: function() {
+    // increment time by 1, remember we cant use "this" here.
+    Timer.time++;
+    
+    // Get the current time, pass that into the stopwatch.timeConverter function,
+    // and save the result in a variable.
+    var converted = Timer.timeConverter(Timer.time);
+    
+    // Use the variable we just created to show the converted time in the "display" div.
+    $("#display_timer").text(converted);
+  },
+  
+  // 2.6 countDown
+  countDown: function() {
+    if(Timer.time === 0){
+      Timer.stop();
+      
+      if(Timer.loading_next === false){
+        checkAnswer();
+        return;
+      }
+      
+      nextQuestion();
+      //setTimeout(function(){ nextQuestion(); }, 5 * 1000);
+      return;
+    }
+    
+    // decrement time by 1, remember we cant use "this" here.
+    Timer.time--;
+    
+    if(Timer.time === (Math.floor(TIMER_SECONDS/4)) && Timer.loading_next === false){
+      $("#display_timer").addClass("wrong-answer");
+    }
+    
+    // Get the current time, pass that into the stopwatch.timeConverter function,
+    // and save the result in a variable.
+    var converted = Timer.timeConverter(Timer.time);
+    
+    // Use the variable we just created to show the converted time in the "display" div.
+    $("#display_timer").text(converted);
+  },
+  
+  // 2.7 timeConverter
+  timeConverter: function(t) {
+    
+    var minutes = Math.floor(t / 60);
+    var seconds = t - (minutes * 60);
+    
+    if (seconds < 10) {
+      seconds = "0" + seconds;
+    }
+    
+    if (minutes === 0) {
+      minutes = "00";
+    }
+    else if (minutes < 10) {
+      minutes = "0" + minutes;
+    }
+
+    return minutes + ":" + seconds;
+  }
+}; // END Timer object
+
+/* ===============[ 3. Document Ready ]====================*/
 $(document).ready(function() {
-  // 2.1 Generate the first question
+  // 3.1 Generate the first question
   QUESTIONS = shuffle_array(QUESTIONS); // Make sure to only shuffle this ONCE
   var q = createQuestion(QUESTIONS[0],ANSWERS,1);
   $(".question_answers").append(q);
 
   /**
-   * 2.2 Make so only one question can be selected.
+   * 3.2 Make so only one question can be selected.
    * which must be done through event delegation using .on() delegated-events approach for this to work after dom manipulation.
    */
   $('.question_answers').on('change', '.custom-control-input', function() {
@@ -480,12 +608,14 @@ $(document).ready(function() {
     if($("#check_answer").length === 0){
       var check_answer_element = $("<i>").addClass("far fa-question-circle fa-4x").attr("id","check_answer");
       $(".quiz_controls .check_answer").html(check_answer_element);
+    }else{
+      $("#check_answer").show();
     }
     
   });
   
   /**
-   * 2.3 Set Quiz Progress to 0%
+   * 3.3 Set Quiz Progress to 0%
    * ClassyLoader depends on the following script,
    * <script src="assets/javascript/jquery.classyloader.min.js" type="text/javascript"></script>
    */
@@ -501,7 +631,7 @@ $(document).ready(function() {
     lineWidth: 10
   });
   
-  // 2.4 Set Up Clickable elements
+  // 3.4 Set Up Clickable elements
   $('.quiz_controls').on('click', '#check_answer', function() {
     checkAnswer();
   });
