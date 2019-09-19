@@ -54,8 +54,8 @@
  *   3.4 Set Up Clickable elements
  * 
  * @todo
- * -Add a START before game starts.
- * -Add Score Page
+ * -Add slide before game STARTS showing [start] button.
+ * -Add slide after game ENDS showing Score Page.
  *****************************************************/
 /* ===============[ 0. GLOBALS ]======================*/
 var SCORE = new Array(QUESTIONS.length);             // Empty array of booleans representing right/wrong answers to the questions.
@@ -90,9 +90,10 @@ function shuffle_array(some_array){
  * <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
  * 
  * @param {element} element 
+ * @param {integer} duration_seconds 
  * @param {string}  selectedEffect 
  */
-function runEffect(element,selectedEffect="pulsate") {
+function runEffect(element, duration_seconds=2, selectedEffect="pulsate") {
   // Most effect types need no options passed by default
   var options = {};
 
@@ -106,9 +107,9 @@ function runEffect(element,selectedEffect="pulsate") {
   }
 
   // Run the effect
-  element.effect( selectedEffect, options, 500, setTimeout(function(){
+  element.effect( selectedEffect, options, ( (duration_seconds * 1000)/4 ), setTimeout(function(){
     element.removeAttr( "style" ).hide().fadeIn();
-  }, 2 * 1000));
+  }, duration_seconds * 1000));
 }; // END runEffect()
 
 /**
@@ -549,7 +550,6 @@ var Timer = {
       }
       
       nextQuestion();
-      //setTimeout(function(){ nextQuestion(); }, 5 * 1000);
       return;
     }
     
@@ -560,6 +560,11 @@ var Timer = {
       $("#display_timer").addClass("wrong-answer");
     }
     
+    if(Timer.time <= (Math.floor(TIMER_SECONDS/4)) && Timer.loading_next === false){
+      runEffect($("#display_timer"));
+    }
+
+
     // Get the current time, pass that into the stopwatch.timeConverter function,
     // and save the result in a variable.
     var converted = Timer.timeConverter(Timer.time);
