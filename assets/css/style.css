@@ -19,6 +19,9 @@
 
 3.0 MAIN LAYOUT INFO
   3.1 Game Layout - Questions and Answers
+  3.2 Game Controls 
+  3.3 Game Timer and Progress
+  3.4 Game Alerts
 
 4.0 FOOTER
   4.1 Footer Links and Credits
@@ -117,8 +120,9 @@ section.section-block {
   margin: 0 auto;
   max-width: 980px;
   text-align: center;
-  /* color: var(--body-background); */ 
-  background-color: #fff; /* rgba(0, 0, 0, 0.5); */ 
+  /* color: var(--body-background); */
+  background-color: #fff;
+  /* rgba(0, 0, 0, 0.5); */
 }
 
 li {
@@ -271,7 +275,7 @@ hr {
   background-color: rgba(82, 97, 107, 0.5);
 }
 
-#correct_answer{
+#correct_answer {
   color: var(--right-answer-color) !important;
 }
 
@@ -283,7 +287,6 @@ hr {
 .wrong-answer {
   color: var(--wrong-answer-color) !important;
 }
-
 
 .show_question {
   cursor: pointer;
@@ -303,6 +306,21 @@ hr {
   border: none;
 }
 
+.btn-primary {
+  margin-bottom: 0.7rem;
+  font-size: 1.3em;
+  color: #fff;
+  border-color: var(--accent-text);
+  background-color: var(--accent-text);
+}
+
+.btn-primary:hover {
+  border-color: var(--button-background);
+  background-color: var(--button-background);
+}
+
+/* 3.2 Game Controls 
+/*------------------------------------------------------*/
 .quiz_controls .far {
   color: var(--primary-menu-background);
   cursor: pointer;
@@ -312,6 +330,12 @@ hr {
   color: var(--body-text);
 }
 
+.fa-question-circle:hover::after {
+  content: "SUBMIT",
+}
+
+/* 3.3 Game Timer and Progress
+/*------------------------------------------------------*/
 #display_timer {
   font-family: monospace;
   font-size: 32px;
@@ -324,7 +348,7 @@ hr {
   /* background: black; */
 }
 
-#display_timer.loading_next{
+#display_timer.loading_next {
   color: var(--accent-text);
 }
 
@@ -333,11 +357,8 @@ hr {
   font-weight: bold;
 }
 
-.fa-question-circle:hover::after {
-  content: "SUBMIT",
-}
-
-/* ALERTS */
+/* 3.4 Game Alerts
+/*------------------------------------------------------*/
 .alert {
   margin-bottom: 0px;
 }

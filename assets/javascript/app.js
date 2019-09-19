@@ -9,34 +9,37 @@
  * ===============[ TABLE OF CONTENTS ]===============
  * 0. Globals
  * 1. Functions
- *   1.1 generateRandomNumber
- *   1.2 shuffle_array
- *   1.3 runEffect
- *   1.4 createQuestion
+ *   1.1 generateRandomNumber()
+ *   1.2 shuffle_array()
+ *   1.3 runEffect()
+ *   1.4 createQuestion()
  *     1.4.1 ANSWER IMAGE
  *     1.4.2 POSSIBLE ANSWERS
  *     1.4.3 See if question has already been graded
  *     1.4.4 COMBINED Answer Image with Possible Answers
  *     1.4.5 COMBINED Answer Block with the question
- *     1.4.6 Start Countdown Timer
+ *     1.4.6 Add Game Controls if question was already graded
+ *     1.4.7 Start Countdown Timer
  * 
- *   1.5 checkAnswer
+ *   1.5 checkAnswer()
  *     1.5.1 Fetch Submitted Answer
  *     1.5.2 See if the answer is right
  *     1.5.3 Save Results weather it was right or wrong.
  *     1.5.4 Update HTML to reflect right and wrong answers
  *     1.5.5 Calculate the score so far
- *     1.5.6 Display Game Alert and Update Game Controls
+ *     1.5.6 Update PROGRESS BARS
+ *     1.5.7 Display Game Alert and Update Game Controls
  * 
- *   1.6 nextQuestion
- *   1.7 previousQuestion
- *   1.8 newGame
+ *   1.6 nextQuestion()
+ *   1.7 previousQuestion()
+ *   1.8 newGame()
  *     1.8.1 Reset Globals
- *     1.8.2 Generate First question
+ *     1.8.2 Show Ready Screen
  *     1.8.3 Set Quiz Progress to 0%
  *     1.8.4 Reset Progress Bars and game alerts
  * 
- *   1.9 gameAlert
+ *   1.9 gameAlert()
+ *   1.10 showReadyScreen()
  * 
  * 2. Timer Object
  *   2.1 reset
@@ -48,19 +51,22 @@
  *   2.7 timeConverter
  * 
  * 3. Document Ready
- *   3.1 Generate the first question
+ *   3.1 Show Ready Screen
  *   3.2 Make so only one question can be selected.
  *   3.3 Set Quiz Progress to 0%
  *   3.4 Set Up Clickable elements
- * 
- * @todo
- * -Add slide before game STARTS showing [start] button.
+ *     3.4.1 #check_answer click function
+ *     3.4.2 #next_question click function
+ *     3.4.3 #previous_question click function
+ *     3.4.4 .show_question click function
+ *     3.4.5 #start-btn click function
+ *     3.4.6 #new-game click function
  *****************************************************/
 /* ===============[ 0. GLOBALS ]======================*/
 var SCORE = new Array(QUESTIONS.length);             // Empty array of booleans representing right/wrong answers to the questions.
 var SUBMITTED_ANSWERS = new Array(QUESTIONS.length); // Empty array of integers representing answers index.
 var QUIZ_PROGRESS = $('.loader');
-var TIMER_SECONDS = 60;
+var TIMER_SECONDS = 24;
 
 /* ===============[ 1. FUNCTIONS ]====================*/
 /**
@@ -109,7 +115,7 @@ function runEffect(element, duration_seconds=2, selectedEffect="pulsate") {
   element.effect( selectedEffect, options, ( (duration_seconds * 1000)/4 ), setTimeout(function(){
     element.removeAttr( "style" ).hide().fadeIn();
   }, duration_seconds * 1000));
-}; // END runEffect()
+} // END runEffect()
 
 /**
  * 1.4 createQuestion
@@ -207,7 +213,7 @@ var createQuestion = function(Q,A,questionNumber){
   question.prepend(q_counter);
   question.append(answer_block);
 
-  // Add Game Controls if question was already graded
+  // 1.4.6 Add Game Controls if question was already graded
   if(SCORE[questionNumber-1] !== undefined){
     var next_question_element = $("<i>").addClass("far fa-arrow-alt-circle-right fa-4x").attr("id","next_question").attr("title","Next Question");
     var previous_question_element = $("<i>").addClass("far fa-arrow-alt-circle-left fa-4x").attr("id","previous_question").attr("title","Previous Question");
@@ -240,13 +246,13 @@ var createQuestion = function(Q,A,questionNumber){
     $(".quiz_controls .next_question").empty();
     $(".quiz_controls .previous_question").empty();
 
-    // 1.4.6 Start Countdown Timer
+    // 1.4.7 Start Countdown Timer
     Timer.reset();
     Timer.startCountDown();
   }
 
   return question;
-};
+} // END createQuestion()
 
 /**
  * 1.5 checkAnswer
@@ -330,7 +336,7 @@ function checkAnswer(){
   var total_score = (right_answers/filtered_score.length)*100;
   total_score = total_score.toFixed(0);
 
-  // Update PROGRESS BARS
+  // 1.5.6 Update PROGRESS BARS
   var right_score = ((right_answers/SCORE.length)*100).toFixed(0) + "%";
   var wrong_score = ((wrong_answers/SCORE.length)*100).toFixed(0) + "%";
   $("#game_progress .bg-success").html(right_score + " right");
@@ -338,7 +344,7 @@ function checkAnswer(){
   $("#game_progress .bg-danger").html(wrong_score + " wrong");
   $("#game_progress .bg-danger").animate({width: wrong_score},"slow");
 
-  // 1.5.6 Display Game Alert and Update Game Controls
+  // 1.5.7 Display Game Alert and Update Game Controls
   var check_answer_element = $("<i>").addClass("far fa-question-circle fa-4x").attr("id","check_answer").attr("title","Submit Answer");
   var next_question_element = $("<i>").addClass("far fa-arrow-alt-circle-right fa-4x").attr("id","next_question").attr("title","Next Question");
   var previous_question_element = "";
@@ -408,7 +414,7 @@ function nextQuestion(){
   var q = createQuestion(QUESTIONS[next_question_index], ANSWERS, question_number);
   $(".question_answers").empty();
   $(".question_answers").append(q);
-} 
+} // END nextQuestion()
 
 /**
  * 1.7 previousQuestion
@@ -423,7 +429,7 @@ function previousQuestion(){
   var q = createQuestion(QUESTIONS[previous_question_index],ANSWERS,question_number);
   $(".question_answers").empty();
   $(".question_answers").append(q);
-}
+} // END previousQuestion()
 
 /**
  * 1.8 newGame
@@ -433,11 +439,8 @@ function newGame(){
   SCORE = new Array(QUESTIONS.length);             
   SUBMITTED_ANSWERS = new Array(QUESTIONS.length);
 
-  // 1.8.2 Generate the first question
-  QUESTIONS = shuffle_array(QUESTIONS); // Make sure to only shuffle this ONCE
-  var q = createQuestion(QUESTIONS[0],ANSWERS,1);
-  $(".question_answers").empty();
-  $(".question_answers").append(q);
+  // 1.8.2 Show Ready Screen
+  showReadyScreen();
 
   /**
    * 1.8.3 Set Quiz Progress to 0%
@@ -465,7 +468,9 @@ function newGame(){
   $("#game_progress .bg-danger").html("");
   $("#game_progress .bg-danger").css("width",0);
   gameAlert();
-}
+  Timer.stop();
+  Timer.reset();
+} // END newGame()
 
 /**
  * 1.9 gameAlert()
@@ -504,7 +509,28 @@ function gameAlert(message="", addThisClass="info"){
   alertElement.html(message);
   $("#main-section .first-row").html(alertElement);
   return;
-}
+} // END gameAlert()
+
+/**
+ * 1.10 showReadyScreen
+ */
+function showReadyScreen(){
+  // Clear Screen
+  $("#display_timer").hide();
+  $(".loader").hide();
+  $("#check_answer").hide();
+  $(".question_answers").empty();
+
+  // Display ready button
+  var ready_text = $("<p>");
+  ready_text.append($("<span>").addClass("h3").text("There will be "+ QUESTIONS.length + " questions total and you will have " + TIMER_SECONDS + " seconds to answer each one."));
+  ready_text.append($("<br>"));
+  ready_text.append($("<br>"));
+  ready_text.append($("<span>").addClass("h4").text("Press start when you are ready?"));
+
+  var ready_button = $("<button>").attr("type","button").addClass("btn btn-primary").attr("id","start-btn").text("Start");
+  $(".question_answers").append(ready_text, ready_button);
+} // END showReadyScreen
 
 /* ===============[ 2. Timer Object ]====================*/
 var Timer = {
@@ -621,10 +647,8 @@ var Timer = {
  * it's the shorthand version of document ready. 
  *********************************************************/
 $(function(){
-  // 3.1 Generate the first question
-  QUESTIONS = shuffle_array(QUESTIONS); // Make sure to only shuffle this ONCE
-  var q = createQuestion(QUESTIONS[0],ANSWERS,1);
-  $(".question_answers").append(q);
+  // 3.1 Show Ready Screen
+  showReadyScreen();
 
   /**
    * 3.2 Make so only one question can be selected.
@@ -667,18 +691,22 @@ $(function(){
   });
   
   // 3.4 Set Up Clickable elements
+  // 3.4.1 #check_answer click function
   $('.quiz_controls').on('click', '#check_answer', function() {
     checkAnswer();
   });
   
+  // 3.4.2 #next_question click function
   $('.quiz_controls').on('click', '#next_question', function() {
     nextQuestion();
   });
   
+  // 3.4.3 #previous_question click function
   $('.quiz_controls').on('click', '#previous_question', function() {
     previousQuestion();
   });
   
+  // 3.4.4 .show_question click function
   $('.score').on('click', '.show_question', function() {
     var question_to_load = parseInt($(this).data("q"));
     var q = createQuestion(QUESTIONS[question_to_load-1],ANSWERS,question_to_load);
@@ -686,6 +714,17 @@ $(function(){
     $(".question_answers").append(q);
   });
   
+  // 3.4.5 #start-btn click function
+  $('.question_answers').on('click','#start-btn', function(){
+    // Create First Question when #start-btn is clicked
+    QUESTIONS = shuffle_array(QUESTIONS); // Make sure to only shuffle this ONCE
+    
+    var q = createQuestion(QUESTIONS[0],ANSWERS,1);
+    $(".question_answers").empty();
+    $(".question_answers").append(q);
+  });
+  
+  // 3.4.6 #new-game click function
   $("#new-game").click(function(e){
     e.preventDefault();
     newGame();
