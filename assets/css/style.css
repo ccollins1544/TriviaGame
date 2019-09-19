@@ -90,7 +90,7 @@ article#main-container {
 * header 63px + margin 22px + footer 83px = 168px
 */
 #main-container.content-wrapper {
-  min-height: calc(100vh - 146px);
+  min-height: calc(100vh - 186px);
 }
 
 section#main-section {
