@@ -518,6 +518,10 @@ function showReadyScreen(){
   // Clear Screen
   $("#display_timer").hide();
   $(".loader").hide();
+  $(".quiz_controls .next_question").empty();
+  $(".quiz_controls .previous_question").empty();
+  $("#correct_answer").remove();
+  $("#wrong_answer").remove();
   $("#check_answer").hide();
   $(".question_answers").empty();
 
