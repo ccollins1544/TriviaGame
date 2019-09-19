@@ -55,7 +55,6 @@
  * 
  * @todo
  * -Add slide before game STARTS showing [start] button.
- * -Add slide after game ENDS showing Score Page.
  *****************************************************/
 /* ===============[ 0. GLOBALS ]======================*/
 var SCORE = new Array(QUESTIONS.length);             // Empty array of booleans representing right/wrong answers to the questions.
@@ -330,9 +329,6 @@ function checkAnswer(){
 
   var total_score = (right_answers/filtered_score.length)*100;
   total_score = total_score.toFixed(0);
-  
-  // Updated CIRCLE LOADER 
-  QUIZ_PROGRESS.setPercent(total_score).draw();
 
   // Update PROGRESS BARS
   var right_score = ((right_answers/SCORE.length)*100).toFixed(0) + "%";
@@ -358,9 +354,32 @@ function checkAnswer(){
   if(QUESTIONS.length === (current_question_index + 1) ){
     previous_question_element = $("<i>").addClass("far fa-arrow-alt-circle-left fa-4x").attr("id","previous_question");
     next_question_element = "";
-  
+    Timer.stop();
+    $("#display_timer").hide();
+    $(".loader").hide();
+
+    var rightSummary = $("<ul>").append("<li><h4>Final Score: "+total_score+"%</h4></li>");
+    rightSummary.find("li").append("<h5>Answered Correct</h5>");
+    var wrongSummary = $("<ul>").append("<li><h5>Answered Wrong</h5></li>");
+
+    for(var i=0; i<SCORE.length; i++){
+      if(SCORE[i]){
+        var rightQuestion = $("<li>").addClass("show_question").attr("data-q",i+1).text("Question "+ (i+1));
+        rightSummary.append(rightQuestion);
+      }else{
+        var wrongQuestion = $("<li>").addClass("show_question").attr("data-q",i+1).text("Question "+ (i+1));
+        wrongSummary.addClass("wrong-answer").append(wrongQuestion);
+      }
+    }
+    
+    $("#quiz_progress .score").empty();
+    $("#quiz_progress .score").append(rightSummary, wrongSummary);
+
   }else{ 
     // NOT last question so start counter for loading the next question.
+    // Update CIRCLE LOADER 
+    QUIZ_PROGRESS.setPercent(total_score).draw();
+
     Timer.loading_next = true;
     Timer.time = (Math.floor(TIMER_SECONDS/4));
     var converted = Timer.timeConverter(Timer.time);
@@ -425,6 +444,9 @@ function newGame(){
    * ClassyLoader depends on the following script,
    * <script src="assets/javascript/jquery.classyloader.min.js" type="text/javascript"></script>
    */
+  $("#quiz_progress .score").html("Score");
+  $("#display_timer").show();
+  $(".loader").show();
   QUIZ_PROGRESS.ClassyLoader({
     animate: false,
     percentage: 0,
@@ -624,6 +646,9 @@ $(document).ready(function() {
    * ClassyLoader depends on the following script,
    * <script src="assets/javascript/jquery.classyloader.min.js" type="text/javascript"></script>
    */
+  $("#quiz_progress .score").html("Score");
+  $("#display_timer").show();
+  $(".loader").show();
   QUIZ_PROGRESS.ClassyLoader({
     animate: false,
     percentage: 0,
@@ -647,6 +672,13 @@ $(document).ready(function() {
   
   $('.quiz_controls').on('click', '#previous_question', function() {
     previousQuestion();
+  });
+  
+  $('.score').on('click', '.show_question', function() {
+    var question_to_load = parseInt($(this).data("q"));
+    var q = createQuestion(QUESTIONS[question_to_load-1],ANSWERS,question_to_load);
+    $(".question_answers").empty();
+    $(".question_answers").append(q);
   });
   
   $("#new-game").click(function(e){

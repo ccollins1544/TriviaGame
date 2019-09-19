@@ -279,6 +279,11 @@ hr {
   color: var(--wrong-answer-color) !important;
 }
 
+
+.show_question {
+  cursor: pointer;
+}
+
 .custom-checkbox .custom-control-label::before {
   border-radius: 50%;
 }
@@ -298,7 +303,7 @@ hr {
   cursor: pointer;
 }
 
-.quiz_controls .far:hover {
+.quiz_controls .far:hover:not(#wrong_answer):not(#right_answer) {
   color: var(--body-text);
 }
 
