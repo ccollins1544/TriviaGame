@@ -25,6 +25,7 @@
  *     1.5.3 Save Results weather it was right or wrong.
  *     1.5.4 Update HTML to reflect right and wrong answers
  *     1.5.5 Calculate the score so far
+ *     1.5.6 Display Game Alert and Update Game Controls
  * 
  *   1.6 nextQuestion
  *   1.7 previousQuestion
@@ -32,7 +33,7 @@
  *     1.8.1 Reset Globals
  *     1.8.2 Generate First question
  *     1.8.3 Set Quiz Progress to 0%
- *     1.8.3 Reset Progress Bars
+ *     1.8.4 Reset Progress Bars and game alerts
  * 
  * 2. Document Ready
  *   2.1 Generate the first question
@@ -138,6 +139,8 @@ var createQuestion = function(Q,A,questionNumber){
   // Shuffle the possible answers so the correct answer is not always the first one. 
   possible_answers = shuffle_array(possible_answers);
 
+  var check_answer_element = false;
+  var correct_answer_text = false;
   for(var i=0; i < possible_answers.length; i++ ){
     var answer_option = $("<li>").addClass("list-group-item");
     answer_option.html($("<div>").addClass("custom-control custom-checkbox mr-sm-2"));
@@ -157,15 +160,19 @@ var createQuestion = function(Q,A,questionNumber){
         if(QUESTIONS[questionNumber-1].answer.indexOf(SUBMITTED_ANSWERS[questionNumber-1]) !== -1){ 
           // They got it right!
           answer_label.addClass("right-answer");
-          
+          check_answer_element = $("<i>").addClass("far fa-check-circle fa-4x").attr("id","correct_answer");
+          gameAlert("You are correct!","success");
+
         }else{ // They got it wrong
           answer_label.addClass("wrong-answer");
+          check_answer_element = $("<i>").addClass("far fa-times-circle fa-4x").attr("id","wrong_answer");
         }
 
       }else{ // NOT their answer
         if(QUESTIONS[questionNumber-1].answer.indexOf(possible_answers[i]) !== -1){ 
           // This is the correct Answer
-          answer_label.addClass("right-answer");  
+          answer_label.addClass("right-answer");
+          correct_answer_text = answer_label.text();
         }
       }
     } // END if already graded
@@ -174,15 +181,55 @@ var createQuestion = function(Q,A,questionNumber){
     answers.find(".list-group").append(answer_option);
   } // END for(var i=0; i < possible_answers.length; i++ ){
 
+  if(correct_answer_text !== false){
+    gameAlert("I'm sorry that is incorrect. The correct answer was <strong>" + correct_answer_text + "</strong>", "danger");
+  }
+
+  // Reset gameAlert if question has not been graded.
+  if(check_answer_element === false){
+    gameAlert();
+  }
+
   // 1.4.4 COMBINED Answer Image with Possible Answers
   answer_block.append(answers);
   answer_block = $("<li>").addClass("list-group-item answer_block").append(answer_block);
 
   // 1.4.5 COMBINED Answer Block with the question
   question = $("<ul>").addClass("list-group text-left").append(question);
-  var q_counter = $("<li>").addClass("list-group-item question_counter").attr("data-start",(questionNumber - 1)).attr("data-end",(QUESTIONS.length-1)).text("Question "+ questionNumber +" of "+ QUESTIONS.length);
+
+  var q_counter = $("<h3>").text("Question " + questionNumber + " of " + QUESTIONS.length);
+  q_counter = $("<li>").addClass("list-group-item question_counter").attr("data-start",(questionNumber - 1)).attr("data-end",(QUESTIONS.length-1)).html(q_counter);
+  q_counter = (Q.subtopic !== "") ? q_counter.append($("<small>").text("Topics: " + Q.topic + ", " + Q.subtopic)) : q_counter.append($("<small>").text("Topic: " + Q.topic));
   question.prepend(q_counter);
   question.append(answer_block);
+
+  // Add Game Controls if question was already graded
+  if(SCORE[questionNumber-1] !== undefined){
+    var next_question_element = $("<i>").addClass("far fa-arrow-alt-circle-right fa-4x").attr("id","next_question");
+    var previous_question_element = $("<i>").addClass("far fa-arrow-alt-circle-left fa-4x").attr("id","previous_question");
+    
+    if(check_answer_element === false){
+      check_answer_element = $("<i>").addClass("far fa-question-circle fa-4x").attr("id","check_answer");
+    }
+
+    // Detect if this is the FIRST question
+    if(questionNumber === 1){
+      previous_question_element = "";
+
+    }else if(SCORE.length === questionNumber){ 
+      // Detect if this is the LAST question
+      next_question_element = "";
+    }
+
+    $(".quiz_controls .check_answer").html(check_answer_element);
+    $(".quiz_controls .next_question").html(next_question_element);
+    $(".quiz_controls .previous_question").html(previous_question_element);
+
+  }else{ // Not Graded so remove controls...and set timer
+    $(".quiz_controls .check_answer").empty();
+    $(".quiz_controls .next_question").empty();
+    $(".quiz_controls .previous_question").empty();
+  }
 
   return question;
 };
@@ -226,9 +273,12 @@ function checkAnswer(){
    * 1.5.4 Update HTML to reflect right and wrong answers
    * by looping through the label elements.
    */
+  var correct_answer_text = false;
   $(".question_answers .answer_block .custom-control-label").each(function(){
     if(matchFound === true && parseInt($(this).attr("data-answer-index")) === submitted_answer){
+      // THIS would be their answer which was right;
       $(this).addClass("right-answer");
+      correct_answer_text = $(this).text();
 
     }else{ // They got the answer wrong so we need to show right and wrong answers
 
@@ -240,6 +290,7 @@ function checkAnswer(){
       // This is the correct answer. 
       if(QUESTIONS[current_question_index].answer.indexOf(parseInt($(this).attr("data-answer-index"))) !== -1 ){
         $(this).addClass("right-answer");
+        correct_answer_text = $(this).text();
       }
     }
   });
@@ -275,6 +326,28 @@ function checkAnswer(){
   $("#game_progress .bg-success").animate({width: right_score}, "slow");
   $("#game_progress .bg-danger").html(wrong_score + " wrong");
   $("#game_progress .bg-danger").animate({width: wrong_score},"slow");
+
+  // 1.5.6 Display Game Alert and Update Game Controls
+  var check_answer_element = $("<i>").addClass("far fa-question-circle fa-4x").attr("id","check_answer");
+  var next_question_element = $("<i>").addClass("far fa-arrow-alt-circle-right fa-4x").attr("id","next_question");
+  var previous_question_element = "";
+  if(matchFound === true && correct_answer_text !== false){
+    gameAlert("You are correct!","success");
+    check_answer_element = $("<i>").addClass("far fa-check-circle fa-4x").attr("id","correct_answer");
+  }else{
+    gameAlert("I'm sorry that is incorrect. The correct answer was <strong>" + correct_answer_text + "</strong>", "danger");
+    check_answer_element = $("<i>").addClass("far fa-times-circle fa-4x").attr("id","wrong_answer");
+  }
+
+  // Detect if that was the LAST question
+  if(QUESTIONS.length === (current_question_index + 1) ){
+    previous_question_element = $("<i>").addClass("far fa-arrow-alt-circle-left fa-4x").attr("id","previous_question");
+    next_question_element = "";
+  }
+
+  $(".quiz_controls .check_answer").html(check_answer_element);
+  $(".quiz_controls .next_question").html(next_question_element);
+  $(".quiz_controls .previous_question").html(previous_question_element);
 
 } // END checkAnswer()
 
@@ -339,11 +412,51 @@ function newGame(){
     lineWidth: 10
   });
 
-  // 1.8.3 Reset Progress Bars
+  // 1.8.4 Reset Progress Bars and game alerts
   $("#game_progress .bg-success").html("");
   $("#game_progress .bg-success").css("width",0);
   $("#game_progress .bg-danger").html("");
   $("#game_progress .bg-danger").css("width",0);
+  gameAlert();
+}
+
+/**
+ * gameAlert()
+ * @param {string} message - Message to go in the alert box
+ * @param {string} addThisClass - defaults to empty string. Can be info, danger, or success. 
+ */
+function gameAlert(message="", addThisClass="info"){
+  var alertElement = $("<div>").addClass("col-12 alert").attr("id","alert_message");
+
+  // RESET Alert Message
+  if(message === ""){
+    $("#main-section .first-row").empty();
+    return;
+    
+  }else if (addThisClass === "info"){ 
+    // Default alert
+    addThisClass = "alert-info";
+    
+  }else if (addThisClass === "danger"){
+    addThisClass = "alert-danger";
+    
+  }else if (addThisClass === "success"){
+    addThisClass = "alert-success";
+  }
+  
+  // IF same alert message keeps getting spammed then add ! and change color red
+  if( $("#alert-messages").html() !== undefined && $("#alert-messages").html() === message ){
+    message += "!";
+    addThisClass = "alert-danger";
+  }
+  
+  // Add the new class
+  alertElement.addClass(addThisClass);
+  
+  // Display the alert message
+  alertElement.html(message);
+  $("#main-section .first-row").html(alertElement);
+  return;
 }
 
 /**
@@ -362,8 +475,15 @@ $(document).ready(function() {
   $('.question_answers').on('change', '.custom-control-input', function() {
     $('.custom-control-input').prop('checked', false);
     $(this).prop('checked', true);
+    
+    // Create Check Answer Element if it does not exist
+    if($("#check_answer").length === 0){
+      var check_answer_element = $("<i>").addClass("far fa-question-circle fa-4x").attr("id","check_answer");
+      $(".quiz_controls .check_answer").html(check_answer_element);
+    }
+    
   });
-
+  
   /**
    * 2.3 Set Quiz Progress to 0%
    * ClassyLoader depends on the following script,
@@ -380,20 +500,20 @@ $(document).ready(function() {
     remainingLineColor: 'rgba(0, 146, 202, 0.3)',
     lineWidth: 10
   });
-
+  
   // 2.4 Set Up Clickable elements
-  $(".check_answer").click(function(){
+  $('.quiz_controls').on('click', '#check_answer', function() {
     checkAnswer();
   });
-
-  $(".next_question").click(function(){
+  
+  $('.quiz_controls').on('click', '#next_question', function() {
     nextQuestion();
   });
-
-  $(".previous_question").click(function(){
+  
+  $('.quiz_controls').on('click', '#previous_question', function() {
     previousQuestion();
   });
-
+  
   $("#new-game").click(function(e){
     e.preventDefault();
     newGame();
