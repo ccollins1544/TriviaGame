@@ -60,7 +60,7 @@
 var SCORE = new Array(QUESTIONS.length);             // Empty array of booleans representing right/wrong answers to the questions.
 var SUBMITTED_ANSWERS = new Array(QUESTIONS.length); // Empty array of integers representing answers index.
 var QUIZ_PROGRESS = $('.loader');
-var TIMER_SECONDS = 20;
+var TIMER_SECONDS = 60;
 
 /* ===============[ 1. FUNCTIONS ]====================*/
 /**
@@ -209,11 +209,11 @@ var createQuestion = function(Q,A,questionNumber){
 
   // Add Game Controls if question was already graded
   if(SCORE[questionNumber-1] !== undefined){
-    var next_question_element = $("<i>").addClass("far fa-arrow-alt-circle-right fa-4x").attr("id","next_question");
-    var previous_question_element = $("<i>").addClass("far fa-arrow-alt-circle-left fa-4x").attr("id","previous_question");
+    var next_question_element = $("<i>").addClass("far fa-arrow-alt-circle-right fa-4x").attr("id","next_question").attr("title","Next Question");
+    var previous_question_element = $("<i>").addClass("far fa-arrow-alt-circle-left fa-4x").attr("id","previous_question").attr("title","Previous Question");
     
     if(check_answer_element === false){
-      check_answer_element = $("<i>").addClass("far fa-question-circle fa-4x").attr("id","check_answer");
+      check_answer_element = $("<i>").addClass("far fa-question-circle fa-4x").attr("id","check_answer").attr("title","Submit Answer");
     }
 
     // Detect if this is the FIRST question
@@ -339,8 +339,8 @@ function checkAnswer(){
   $("#game_progress .bg-danger").animate({width: wrong_score},"slow");
 
   // 1.5.6 Display Game Alert and Update Game Controls
-  var check_answer_element = $("<i>").addClass("far fa-question-circle fa-4x").attr("id","check_answer");
-  var next_question_element = $("<i>").addClass("far fa-arrow-alt-circle-right fa-4x").attr("id","next_question");
+  var check_answer_element = $("<i>").addClass("far fa-question-circle fa-4x").attr("id","check_answer").attr("title","Submit Answer");
+  var next_question_element = $("<i>").addClass("far fa-arrow-alt-circle-right fa-4x").attr("id","next_question").attr("title","Next Question");
   var previous_question_element = "";
   if(matchFound === true && correct_answer_text !== false){
     gameAlert("You are correct!","success");
@@ -352,7 +352,7 @@ function checkAnswer(){
 
   // Detect if that was the LAST question
   if(QUESTIONS.length === (current_question_index + 1) ){
-    previous_question_element = $("<i>").addClass("far fa-arrow-alt-circle-left fa-4x").attr("id","previous_question");
+    previous_question_element = $("<i>").addClass("far fa-arrow-alt-circle-left fa-4x").attr("id","previous_question").attr("title","Previous Question");
     next_question_element = "";
     Timer.stop();
     $("#display_timer").hide();
@@ -616,8 +616,11 @@ var Timer = {
   }
 }; // END Timer object
 
-/* ===============[ 3. Document Ready ]====================*/
-$(document).ready(function() {
+/**===============[ 3. Document Ready ]==================== 
+ * NOTE: $(function(){ === $(document).ready(function() {
+ * it's the shorthand version of document ready. 
+ *********************************************************/
+$(function(){
   // 3.1 Generate the first question
   QUESTIONS = shuffle_array(QUESTIONS); // Make sure to only shuffle this ONCE
   var q = createQuestion(QUESTIONS[0],ANSWERS,1);
@@ -633,13 +636,15 @@ $(document).ready(function() {
     
     // Create Check Answer Element if it does not exist
     if($("#check_answer").length === 0){
-      var check_answer_element = $("<i>").addClass("far fa-question-circle fa-4x").attr("id","check_answer");
+      var check_answer_element = $("<i>").addClass("far fa-question-circle fa-4x").attr("id","check_answer").attr("title","Submit Answer");
       $(".quiz_controls .check_answer").html(check_answer_element);
     }else{
       $("#check_answer").show();
     }
-    
   });
+
+  // Style Tooltips for check_answer
+  $(document).tooltip();
   
   /**
    * 3.3 Set Quiz Progress to 0%

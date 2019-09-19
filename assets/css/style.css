@@ -333,6 +333,9 @@ hr {
   font-weight: bold;
 }
 
+.fa-question-circle:hover::after {
+  content: "SUBMIT",
+}
 
 /* ALERTS */
 .alert {
